@@ -332,6 +332,7 @@ canvas {
     <button class="diff-btn" data-diff="normal">NORMAL</button>
     <button class="diff-btn" data-diff="hard">HARD</button>
   </div>
+  <div id="menu-highscore" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);letter-spacing:2px;margin-bottom:24px;text-transform:uppercase;"></div>
   <button class="btn btn-primary" id="start-btn">START</button>
 </div>
 
@@ -703,15 +704,26 @@ document.getElementById('menu-btn').addEventListener('click', () => {
   document.getElementById('gameover-screen').style.display = 'none';
   document.getElementById('menu-screen').style.display = 'flex';
   state.phase = 'menu';
+  updateMenuHi();
 });
+
+function updateMenuHi() {
+  const hi = parseInt(localStorage.getItem('typestorm-hi-' + state.difficulty) || '0');
+  const el = document.getElementById('menu-highscore');
+  el.textContent = hi > 0 ? `Best: ${hi}` : '';
+}
 
 document.querySelectorAll('.diff-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     state.difficulty = btn.dataset.diff;
+    updateMenuHi();
   });
 });
+
+// Show high score on load
+updateMenuHi();
 
 // ─── RENDER LOOP ───
 let lastTime = 0;
