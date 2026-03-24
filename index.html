@@ -8,16 +8,32 @@
 <meta property="og:title" content="TypeStorm — How Fast Can You Type?">
 <meta property="og:description" content="Words fall from the sky. Type them before they hit the ground. How long can you survive?">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#6366f1">
+<meta name="theme-color" content="#e8614d">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #080b12;
+  --surface: rgba(15, 20, 30, 0.85);
+  --border: rgba(60, 70, 90, 0.35);
+  --primary: #e8614d;
+  --primary-dim: rgba(232, 97, 77, 0.15);
+  --primary-glow: rgba(232, 97, 77, 0.4);
+  --success: #5de8c1;
+  --success-dim: rgba(93, 232, 193, 0.25);
+  --combo: #d4a843;
+  --danger: #ff3d5a;
+  --text: #c8ccd4;
+  --text-dim: #3e4555;
+  --text-bright: #eef0f4;
+}
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: #0a0a0f;
-  color: #e0e0e0;
-  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
@@ -29,13 +45,7 @@ canvas {
   height: 100vh;
 }
 
-#ui-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none;
-  z-index: 10;
-}
-
+/* ─── INPUT ─── */
 #input-box {
   position: fixed;
   bottom: 40px;
@@ -47,59 +57,92 @@ canvas {
 
 #input-box input {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 24px;
-  padding: 12px 24px;
-  width: 400px;
+  font-size: 22px;
+  font-weight: 400;
+  padding: 14px 24px;
+  width: 420px;
   max-width: 90vw;
-  background: rgba(15, 15, 25, 0.9);
-  border: 2px solid #333;
-  border-radius: 12px;
-  color: #fff;
+  background: rgba(8, 11, 18, 0.92);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--primary);
+  border-radius: 2px;
+  color: var(--text-bright);
   text-align: center;
   outline: none;
-  transition: border-color 0.15s;
+  letter-spacing: 1px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+  caret-color: var(--primary);
+}
+
+#input-box input::placeholder {
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  font-size: 14px;
+  text-transform: uppercase;
 }
 
 #input-box input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  border-color: var(--primary);
+  box-shadow: 0 2px 20px var(--primary-glow), inset 0 -1px 0 var(--primary);
 }
 
 #input-box input.correct {
-  border-color: #22c55e;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  border-color: var(--success);
+  border-bottom-color: var(--success);
+  box-shadow: 0 2px 16px rgba(93, 232, 193, 0.2);
 }
 
 #input-box input.wrong {
-  border-color: #ef4444;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  border-color: var(--danger);
+  border-bottom-color: var(--danger);
+  box-shadow: 0 2px 16px rgba(255, 61, 90, 0.15);
 }
 
+/* ─── HUD ─── */
 #hud {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 0;
   z-index: 20;
   pointer-events: none;
   font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(180deg, rgba(8,11,18,0.7) 0%, transparent 100%);
+  padding: 16px 20px 24px;
 }
 
 .hud-item {
-  background: rgba(15, 15, 25, 0.8);
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid #222;
+  padding: 0 20px;
+  text-align: center;
+  border-right: 1px solid rgba(60, 70, 90, 0.2);
 }
 
-.hud-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-.hud-value { font-size: 22px; font-weight: 700; color: #fff; }
-.hud-value.combo { color: #f59e0b; }
-.hud-value.wpm { color: #6366f1; }
-.hud-value.score { color: #22c55e; }
+.hud-item:last-child { border-right: none; }
 
+.hud-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.hud-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-top: 2px;
+}
+
+.hud-value.combo { color: var(--combo); }
+.hud-value.wpm { color: var(--primary); }
+.hud-value.score { color: var(--success); }
+
+/* ─── SCREENS ─── */
 #menu-screen, #gameover-screen {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -108,102 +151,162 @@ canvas {
   align-items: center;
   justify-content: center;
   z-index: 100;
-  background: rgba(5, 5, 10, 0.95);
+  background: rgba(8, 11, 18, 0.96);
   pointer-events: all;
 }
 
+/* ─── TITLE ─── */
 #menu-screen h1 {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(48px, 10vw, 72px);
-  font-weight: 900;
-  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(64px, 14vw, 120px);
+  font-weight: 400;
+  color: var(--primary);
+  letter-spacing: 0.08em;
+  line-height: 0.9;
+  text-shadow: 0 0 40px var(--primary-glow), 0 0 80px rgba(232, 97, 77, 0.15);
+  margin-bottom: 0;
+  position: relative;
+}
+
+#menu-screen h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 2px;
+  background: var(--primary);
+  margin: 16px auto 0;
+  opacity: 0.6;
 }
 
 #menu-screen .subtitle {
-  font-size: 18px;
-  color: #666;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-top: 20px;
   margin-bottom: 48px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
+/* ─── BUTTONS ─── */
 .btn {
-  font-family: 'Outfit', sans-serif;
-  font-size: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
   font-weight: 600;
-  padding: 14px 48px;
+  padding: 14px 52px;
   border: none;
-  border-radius: 12px;
+  border-radius: 2px;
   cursor: pointer;
-  margin: 8px;
-  transition: transform 0.1s, box-shadow 0.2s;
+  margin: 6px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.12s;
 }
 
-.btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
+.btn:active { transform: scale(0.97); }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  background: var(--primary);
+  color: #0a0a0a;
+  box-shadow: 0 4px 24px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  background: #f07060;
+  box-shadow: 0 6px 32px rgba(232, 97, 77, 0.5);
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.05);
-  color: #aaa;
-  border: 1px solid #333;
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
 }
 
+.btn-secondary:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+/* ─── GAME OVER ─── */
 #gameover-screen h2 {
-  font-size: 48px;
-  font-weight: 900;
-  color: #fff;
-  margin-bottom: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 56px;
+  font-weight: 400;
+  color: var(--text-bright);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 24px 0 32px;
+  gap: 1px;
+  margin: 28px 0 36px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .stat-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid #222;
-  border-radius: 12px;
-  padding: 16px 24px;
+  background: rgba(8, 11, 18, 0.95);
+  padding: 18px 28px;
   text-align: center;
 }
 
-.stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-.stat-card .value { font-size: 32px; font-weight: 700; color: #fff; margin-top: 4px; }
-.stat-card .value.purple { color: #8b5cf6; }
-.stat-card .value.green { color: #22c55e; }
-.stat-card .value.amber { color: #f59e0b; }
-.stat-card .value.red { color: #ef4444; }
+.stat-card .label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
 
+.stat-card .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-top: 6px;
+}
+
+.stat-card .value.mint { color: var(--success); }
+.stat-card .value.coral { color: var(--primary); }
+.stat-card .value.gold { color: var(--combo); }
+.stat-card .value.hot { color: var(--danger); }
+
+/* ─── DIFFICULTY ─── */
 #difficulty-select {
   display: flex;
-  gap: 12px;
+  gap: 0;
   margin-bottom: 32px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .diff-btn {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  padding: 8px 20px;
-  border: 1px solid #333;
-  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 24px;
+  border: none;
+  border-right: 1px solid var(--border);
   background: transparent;
-  color: #888;
+  color: var(--text-dim);
   cursor: pointer;
-  transition: all 0.15s;
+  letter-spacing: 1px;
+  transition: all 0.12s;
 }
 
-.diff-btn:hover { border-color: #6366f1; color: #fff; }
-.diff-btn.active { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #fff; }
+.diff-btn:last-child { border-right: none; }
+.diff-btn:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.diff-btn.active {
+  color: var(--primary);
+  background: var(--primary-dim);
+}
 </style>
 </head>
 <body>
@@ -218,33 +321,51 @@ canvas {
 </div>
 
 <div id="input-box" style="display:none;">
-  <input type="text" id="type-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type here...">
+  <input type="text" id="type-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="start typing">
 </div>
 
 <div id="menu-screen">
-  <h1>TypeStorm</h1>
+  <h1>TYPESTORM</h1>
   <div class="subtitle">Type the falling words before they crash</div>
   <div id="difficulty-select">
     <button class="diff-btn active" data-diff="easy">EASY</button>
     <button class="diff-btn" data-diff="normal">NORMAL</button>
     <button class="diff-btn" data-diff="hard">HARD</button>
   </div>
-  <button class="btn btn-primary" id="start-btn">Start Game</button>
+  <button class="btn btn-primary" id="start-btn">START</button>
 </div>
 
 <div id="gameover-screen" style="display:none;">
-  <h2>Game Over</h2>
+  <h2>GAME OVER</h2>
   <div class="stats-grid">
-    <div class="stat-card"><div class="label">Score</div><div class="value green" id="go-score">0</div></div>
-    <div class="stat-card"><div class="label">Best WPM</div><div class="value purple" id="go-wpm">0</div></div>
-    <div class="stat-card"><div class="label">Words Typed</div><div class="value amber" id="go-words">0</div></div>
-    <div class="stat-card"><div class="label">Max Combo</div><div class="value red" id="go-combo">0</div></div>
+    <div class="stat-card"><div class="label">Score</div><div class="value mint" id="go-score">0</div></div>
+    <div class="stat-card"><div class="label">Best WPM</div><div class="value coral" id="go-wpm">0</div></div>
+    <div class="stat-card"><div class="label">Words Typed</div><div class="value gold" id="go-words">0</div></div>
+    <div class="stat-card"><div class="label">Max Combo</div><div class="value hot" id="go-combo">0</div></div>
   </div>
-  <button class="btn btn-primary" id="retry-btn">Play Again</button>
-  <button class="btn btn-secondary" id="menu-btn">Menu</button>
+  <button class="btn btn-primary" id="retry-btn">AGAIN</button>
+  <button class="btn btn-secondary" id="menu-btn">MENU</button>
 </div>
 
 <script>
+// ─── PALETTE (canvas-side) ───
+const C = {
+  bg: '#080b12',
+  primary: '#e8614d',
+  primaryDim: 'rgba(232, 97, 77, 0.12)',
+  primaryGlow: 'rgba(232, 97, 77, 0.35)',
+  success: '#5de8c1',
+  successDim: 'rgba(93, 232, 193, 0.2)',
+  combo: '#d4a843',
+  danger: '#ff3d5a',
+  text: '#c8ccd4',
+  textDim: '#3e4555',
+  textBright: '#eef0f4',
+  surface: 'rgba(12, 16, 24, 0.82)',
+  border: 'rgba(50, 60, 80, 0.45)',
+  rain: 'rgba(100, 120, 160, 0.08)',
+};
+
 // ─── WORD LISTS ───
 const WORDS_EASY = [
   "the","and","for","are","but","not","you","all","can","had","her","was","one","our","out",
@@ -276,7 +397,7 @@ const WORDS_HARD = [
   "database","deadline","december","decision","declared","declined","decrease","defaults",
   "defender","defining","delicate","delivery","designed","detailed","develop","diagonal",
   "dialogue","dinosaur","directly","discover","dispatch","distinct","district","doctrine",
-  "document","domestic","dominant","DownLoad","drafting","dramatic","duration","dynamics",
+  "document","domestic","dominant","download","drafting","dramatic","duration","dynamics",
   "keyboard","function","variable","template","protocol","iterator","compiler","debugger",
   "encoding","pipeline","frontend","overflow","electron","firewall","graphics","hardware"
 ];
@@ -287,7 +408,7 @@ const ctx = canvas.getContext('2d');
 let W, H;
 
 const state = {
-  phase: 'menu', // menu | playing | gameover
+  phase: 'menu',
   difficulty: 'easy',
   score: 0,
   combo: 0,
@@ -297,16 +418,17 @@ const state = {
   wordsPerMin: 0,
   bestWpm: 0,
   startTime: 0,
-  words: [],        // active falling words
-  particles: [],    // hit particles
+  words: [],
+  particles: [],
   spawnTimer: 0,
   spawnInterval: 2000,
   baseSpeed: 0.4,
   typed: '',
-  targetWord: null,  // the word currently being targeted
-  bgStars: [],
+  targetWord: null,
+  rain: [],
   shakeX: 0, shakeY: 0, shakeDecay: 0,
-  popups: [],  // floating score popups
+  popups: [],
+  scanY: 0, // horizontal scan line
 };
 
 const DIFF = {
@@ -325,24 +447,24 @@ function resize() {
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  initRain();
 }
 window.addEventListener('resize', resize);
 resize();
 
-// ─── BACKGROUND STARS ───
-function initStars() {
-  state.bgStars = [];
-  for (let i = 0; i < 120; i++) {
-    state.bgStars.push({
+// ─── RAIN (replaces stars) ───
+function initRain() {
+  state.rain = [];
+  for (let i = 0; i < 80; i++) {
+    state.rain.push({
       x: Math.random() * W,
       y: Math.random() * H,
-      r: Math.random() * 1.5 + 0.3,
-      a: Math.random() * 0.5 + 0.1,
-      speed: Math.random() * 0.15 + 0.02,
+      len: Math.random() * 18 + 6,
+      speed: Math.random() * 1.8 + 0.4,
+      alpha: Math.random() * 0.07 + 0.02,
     });
   }
 }
-initStars();
 
 // ─── PARTICLES ───
 function spawnParticles(x, y, color, count = 12) {
@@ -354,8 +476,8 @@ function spawnParticles(x, y, color, count = 12) {
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed - 1,
       life: 1,
-      decay: Math.random() * 0.02 + 0.015,
-      r: Math.random() * 3 + 1.5,
+      decay: Math.random() * 0.025 + 0.015,
+      r: Math.random() * 2.5 + 1,
       color,
     });
   }
@@ -367,7 +489,7 @@ function shake(intensity = 8) {
 }
 
 // ─── SCORE POPUPS ───
-function addPopup(x, y, text, color = '#22c55e') {
+function addPopup(x, y, text, color = C.success) {
   state.popups.push({ x, y, text, color, life: 1, vy: -1.5 });
 }
 
@@ -377,7 +499,6 @@ function getWordList() { return DIFF[state.difficulty].list; }
 function spawnWord() {
   const list = getWordList();
   const text = list[Math.floor(Math.random() * list.length)];
-  // Don't spawn duplicates
   if (state.words.find(w => w.text === text)) return;
 
   const padding = 80;
@@ -388,7 +509,7 @@ function spawnWord() {
     x,
     y: -20,
     speed: DIFF[state.difficulty].speed * (0.8 + Math.random() * 0.4),
-    matched: 0,   // chars matched so far
+    matched: 0,
     targeted: false,
     alpha: 1,
     scale: 1,
@@ -403,9 +524,7 @@ input.addEventListener('input', () => {
 
   const typed = input.value.toLowerCase();
 
-  // Find or confirm target word
   if (!state.targetWord) {
-    // Find best match
     for (const w of state.words) {
       if (w.text.startsWith(typed)) {
         state.targetWord = w;
@@ -421,7 +540,6 @@ input.addEventListener('input', () => {
       w.matched = typed.length;
       input.className = typed.length > 0 ? 'correct' : '';
 
-      // Word complete!
       if (typed === w.text) {
         completeWord(w);
         input.value = '';
@@ -429,13 +547,11 @@ input.addEventListener('input', () => {
         state.targetWord = null;
       }
     } else {
-      // Wrong — reset target
       input.className = 'wrong';
       w.matched = 0;
       w.targeted = false;
       state.targetWord = null;
 
-      // Try to find a new match
       for (const w2 of state.words) {
         if (w2.text.startsWith(typed)) {
           state.targetWord = w2;
@@ -461,24 +577,22 @@ function completeWord(w) {
   state.score += points;
   state.wordsTyped++;
 
-  // WPM calc
   const elapsed = (Date.now() - state.startTime) / 60000;
   if (elapsed > 0.05) {
     state.wordsPerMin = Math.round(state.wordsTyped / elapsed);
     if (state.wordsPerMin > state.bestWpm) state.bestWpm = state.wordsPerMin;
   }
 
-  // Particles + popup
-  const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#22c55e'];
-  spawnParticles(w.x, w.y, colors[Math.floor(Math.random() * colors.length)], 16);
-  const popText = state.combo >= 5 ? `+${points} ${state.combo}x!` : `+${points}`;
-  addPopup(w.x, w.y - 20, popText, state.combo >= 5 ? '#f59e0b' : '#22c55e');
+  // Particles — mint shards
+  spawnParticles(w.x, w.y, C.success, 14);
+  if (state.combo >= 5) spawnParticles(w.x, w.y, C.combo, 6);
 
-  // Remove word
+  const popText = state.combo >= 5 ? `+${points} ${state.combo}x` : `+${points}`;
+  addPopup(w.x, w.y - 20, popText, state.combo >= 5 ? C.combo : C.success);
+
   const idx = state.words.indexOf(w);
   if (idx >= 0) state.words.splice(idx, 1);
 
-  // Speed up over time
   if (state.wordsTyped % 10 === 0) {
     state.spawnInterval = Math.max(600, state.spawnInterval - 100);
   }
@@ -490,8 +604,8 @@ function missWord(w) {
   state.lives--;
   state.combo = 0;
   shake(10);
-  spawnParticles(w.x, w.y, '#ef4444', 10);
-  addPopup(w.x, w.y - 20, 'MISS', '#ef4444');
+  spawnParticles(w.x, w.y, C.danger, 10);
+  addPopup(w.x, w.y - 20, 'MISS', C.danger);
 
   const idx = state.words.indexOf(w);
   if (idx >= 0) state.words.splice(idx, 1);
@@ -514,7 +628,7 @@ function updateHUD() {
   document.getElementById('hud-score').textContent = state.score;
   document.getElementById('hud-wpm').textContent = state.wordsPerMin;
   document.getElementById('hud-combo').textContent = state.combo + 'x';
-  document.getElementById('hud-lives').textContent = '♥'.repeat(Math.max(0, state.lives));
+  document.getElementById('hud-lives').textContent = '\u2588'.repeat(Math.max(0, state.lives));
 }
 
 // ─── GAME FLOW ───
@@ -530,6 +644,7 @@ function startGame() {
   state.startTime = Date.now();
   state.words = [];
   state.particles = [];
+  state.popups = [];
   state.spawnTimer = 0;
   state.spawnInterval = DIFF[state.difficulty].interval;
   state.targetWord = null;
@@ -551,28 +666,32 @@ function endGame() {
   document.getElementById('hud').style.display = 'none';
   document.getElementById('input-box').style.display = 'none';
 
-  // High score
   const key = 'typestorm-hi-' + state.difficulty;
   const prevHi = parseInt(localStorage.getItem(key) || '0');
   const isNewHi = state.score > prevHi;
   if (isNewHi) localStorage.setItem(key, state.score);
 
   document.getElementById('go-score').textContent = state.score;
-  document.getElementById('go-score').style.color = isNewHi ? '#f59e0b' : '#22c55e';
   document.getElementById('go-wpm').textContent = state.bestWpm;
   document.getElementById('go-words').textContent = state.wordsTyped;
   document.getElementById('go-combo').textContent = state.maxCombo + 'x';
 
-  // Show/hide new high score badge
   let badge = document.getElementById('hi-badge');
   if (!badge) {
     badge = document.createElement('div');
     badge.id = 'hi-badge';
-    badge.style.cssText = 'color:#f59e0b;font-size:16px;font-weight:700;margin-top:4px;letter-spacing:2px;';
+    badge.style.cssText = `
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    `;
     document.querySelector('#gameover-screen h2').after(badge);
   }
-  badge.textContent = isNewHi ? 'NEW HIGH SCORE!' : `Best: ${prevHi}`;
-  badge.style.color = isNewHi ? '#f59e0b' : '#666';
+  badge.textContent = isNewHi ? 'NEW HIGH SCORE' : `BEST: ${prevHi}`;
+  badge.style.color = isNewHi ? C.combo : C.textDim;
 
   document.getElementById('gameover-screen').style.display = 'flex';
 }
@@ -613,20 +732,27 @@ function gameLoop(time) {
   ctx.translate(state.shakeX, state.shakeY);
 
   // Clear
-  ctx.fillStyle = '#0a0a0f';
+  ctx.fillStyle = C.bg;
   ctx.fillRect(-10, -10, W + 20, H + 20);
 
-  // Stars
-  for (const s of state.bgStars) {
-    s.y += s.speed * dt * 0.05;
-    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
-    ctx.globalAlpha = s.a;
-    ctx.fillStyle = '#fff';
+  // Rain streaks
+  for (const r of state.rain) {
+    r.y += r.speed * dt * 0.08;
+    if (r.y > H + r.len) { r.y = -r.len; r.x = Math.random() * W; }
+    ctx.globalAlpha = r.alpha;
+    ctx.strokeStyle = '#6880a8';
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(r.x, r.y);
+    ctx.lineTo(r.x, r.y + r.len);
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
+
+  // Horizontal scan line (subtle)
+  state.scanY = (state.scanY + dt * 0.03) % H;
+  ctx.fillStyle = 'rgba(232, 97, 77, 0.015)';
+  ctx.fillRect(0, state.scanY - 1, W, 2);
 
   if (state.phase === 'playing') {
     // Spawn words
@@ -641,25 +767,29 @@ function gameLoop(time) {
       const w = state.words[i];
       w.y += w.speed * dt * 0.06;
 
-      // Hit bottom
       if (w.y > H - 80) {
         missWord(w);
         continue;
       }
 
-      // Draw word
       drawWord(w);
     }
 
-    // Draw ground line
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([8, 8]);
+    // Ground line — pulsing coral
+    const pulse = 0.3 + Math.sin(time * 0.003) * 0.1;
+    ctx.strokeStyle = `rgba(232, 97, 77, ${pulse})`;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, H - 80);
     ctx.lineTo(W, H - 80);
     ctx.stroke();
-    ctx.setLineDash([]);
+
+    // Faint glow beneath ground line
+    const grd = ctx.createLinearGradient(0, H - 80, 0, H - 40);
+    grd.addColorStop(0, `rgba(232, 97, 77, ${pulse * 0.15})`);
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, H - 80, W, 40);
   }
 
   // Particles
@@ -667,7 +797,7 @@ function gameLoop(time) {
     const p = state.particles[i];
     p.x += p.vx;
     p.y += p.vy;
-    p.vy += 0.05; // gravity
+    p.vy += 0.06;
     p.life -= p.decay;
 
     if (p.life <= 0) {
@@ -675,11 +805,11 @@ function gameLoop(time) {
       continue;
     }
 
-    ctx.globalAlpha = p.life;
+    ctx.globalAlpha = p.life * 0.8;
     ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
-    ctx.fill();
+    // Square particles instead of circles — sharper aesthetic
+    const s = p.r * p.life;
+    ctx.fillRect(p.x - s/2, p.y - s/2, s, s);
   }
   ctx.globalAlpha = 1;
 
@@ -690,7 +820,7 @@ function gameLoop(time) {
     p.life -= 0.015;
     if (p.life <= 0) { state.popups.splice(i, 1); continue; }
     ctx.globalAlpha = p.life;
-    ctx.font = '700 18px "Outfit", sans-serif';
+    ctx.font = '700 14px "JetBrains Mono", monospace';
     ctx.fillStyle = p.color;
     ctx.textAlign = 'center';
     ctx.fillText(p.text, p.x, p.y);
@@ -698,59 +828,57 @@ function gameLoop(time) {
   }
   ctx.globalAlpha = 1;
 
-  ctx.restore(); // end shake transform
+  ctx.restore();
 
   requestAnimationFrame(gameLoop);
 }
 
 function drawWord(w) {
-  ctx.font = '700 22px "JetBrains Mono", monospace';
+  ctx.font = '700 20px "JetBrains Mono", monospace';
 
   const text = w.text;
   const totalWidth = ctx.measureText(text).width;
   const x = w.x - totalWidth / 2;
   const y = w.y;
 
-  // Background pill
+  // Background — sharp rectangle, not pill
   const pad = 10;
-  const pillW = totalWidth + pad * 2;
-  const pillH = 36;
-  const pillX = x - pad;
-  const pillY = y - 24;
+  const boxW = totalWidth + pad * 2;
+  const boxH = 32;
+  const boxX = x - pad;
+  const boxY = y - 22;
 
   // Glow for targeted word
   if (w.targeted) {
-    ctx.shadowColor = '#6366f1';
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = C.primary;
+    ctx.shadowBlur = 12;
   }
 
-  ctx.fillStyle = w.targeted ? 'rgba(99, 102, 241, 0.15)' : 'rgba(20, 20, 35, 0.8)';
-  ctx.strokeStyle = w.targeted ? 'rgba(99, 102, 241, 0.5)' : 'rgba(50, 50, 70, 0.5)';
-  ctx.lineWidth = 1.5;
+  ctx.fillStyle = w.targeted ? C.primaryDim : C.surface;
+  ctx.strokeStyle = w.targeted ? C.primary : C.border;
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+  ctx.rect(boxX, boxY, boxW, boxH);
   ctx.fill();
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Progress bar under pill
+  // Progress fill
   if (w.matched > 0) {
     const progress = w.matched / text.length;
-    ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
-    ctx.beginPath();
-    ctx.roundRect(pillX, pillY, pillW * progress, pillH, 8);
-    ctx.fill();
+    ctx.fillStyle = C.successDim;
+    ctx.fillRect(boxX, boxY, boxW * progress, boxH);
   }
 
-  // Draw characters
+  // Characters
   let cx = x;
   for (let i = 0; i < text.length; i++) {
     if (i < w.matched) {
-      ctx.fillStyle = '#22c55e'; // matched = green
+      ctx.fillStyle = C.success;
     } else if (w.targeted) {
-      ctx.fillStyle = '#e0e0e0'; // targeted = bright
+      ctx.fillStyle = C.textBright;
     } else {
-      ctx.fillStyle = '#888'; // default = dim
+      ctx.fillStyle = C.textDim;
     }
     ctx.fillText(text[i], cx, y);
     cx += ctx.measureText(text[i]).width;
