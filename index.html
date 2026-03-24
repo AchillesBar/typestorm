@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TypeStorm — How Fast Can You Type?</title>
+<meta name="description" content="Type falling words before they crash! A fast-paced typing game with combos, difficulty levels, and high scores. Free to play in your browser.">
+<meta property="og:title" content="TypeStorm — How Fast Can You Type?">
+<meta property="og:description" content="Words fall from the sky. Type them before they hit the ground. How long can you survive?">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#6366f1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#ui-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#input-box {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: all;
+}
+
+#input-box input {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  padding: 12px 24px;
+  width: 400px;
+  max-width: 90vw;
+  background: rgba(15, 15, 25, 0.9);
+  border: 2px solid #333;
+  border-radius: 12px;
+  color: #fff;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#input-box input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+#input-box input.correct {
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+#input-box input.wrong {
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+#hud {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 20;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hud-item {
+  background: rgba(15, 15, 25, 0.8);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+
+.hud-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+.hud-value { font-size: 22px; font-weight: 700; color: #fff; }
+.hud-value.combo { color: #f59e0b; }
+.hud-value.wpm { color: #6366f1; }
+.hud-value.score { color: #22c55e; }
+
+#menu-screen, #gameover-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: rgba(5, 5, 10, 0.95);
+  pointer-events: all;
+}
+
+#menu-screen h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(48px, 10vw, 72px);
+  font-weight: 900;
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+#menu-screen .subtitle {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 48px;
+}
+
+.btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 14px 48px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  margin: 8px;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: #aaa;
+  border: 1px solid #333;
+}
+
+#gameover-screen h2 {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 24px 0 32px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+}
+
+.stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+.stat-card .value { font-size: 32px; font-weight: 700; color: #fff; margin-top: 4px; }
+.stat-card .value.purple { color: #8b5cf6; }
+.stat-card .value.green { color: #22c55e; }
+.stat-card .value.amber { color: #f59e0b; }
+.stat-card .value.red { color: #ef4444; }
+
+#difficulty-select {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.diff-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  padding: 8px 20px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.diff-btn:hover { border-color: #6366f1; color: #fff; }
+.diff-btn.active { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #fff; }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud" style="display:none;">
+  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value score" id="hud-score">0</div></div>
+  <div class="hud-item"><div class="hud-label">WPM</div><div class="hud-value wpm" id="hud-wpm">0</div></div>
+  <div class="hud-item"><div class="hud-label">Combo</div><div class="hud-value combo" id="hud-combo">0x</div></div>
+  <div class="hud-item"><div class="hud-label">Lives</div><div class="hud-value" id="hud-lives">3</div></div>
+</div>
+
+<div id="input-box" style="display:none;">
+  <input type="text" id="type-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type here...">
+</div>
+
+<div id="menu-screen">
+  <h1>TypeStorm</h1>
+  <div class="subtitle">Type the falling words before they crash</div>
+  <div id="difficulty-select">
+    <button class="diff-btn active" data-diff="easy">EASY</button>
+    <button class="diff-btn" data-diff="normal">NORMAL</button>
+    <button class="diff-btn" data-diff="hard">HARD</button>
+  </div>
+  <button class="btn btn-primary" id="start-btn">Start Game</button>
+</div>
+
+<div id="gameover-screen" style="display:none;">
+  <h2>Game Over</h2>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Score</div><div class="value green" id="go-score">0</div></div>
+    <div class="stat-card"><div class="label">Best WPM</div><div class="value purple" id="go-wpm">0</div></div>
+    <div class="stat-card"><div class="label">Words Typed</div><div class="value amber" id="go-words">0</div></div>
+    <div class="stat-card"><div class="label">Max Combo</div><div class="value red" id="go-combo">0</div></div>
+  </div>
+  <button class="btn btn-primary" id="retry-btn">Play Again</button>
+  <button class="btn btn-secondary" id="menu-btn">Menu</button>
+</div>
+
+<script>
+// ─── WORD LISTS ───
+const WORDS_EASY = [
+  "the","and","for","are","but","not","you","all","can","had","her","was","one","our","out",
+  "day","get","has","him","his","how","its","may","new","now","old","see","way","who","did",
+  "boy","let","put","say","she","too","use","dad","mom","big","end","far","few","got","run",
+  "dog","cat","red","sun","top","hot","six","yes","eat","sit","try","ask","car","fly","fun",
+  "game","play","type","word","fast","code","fire","rain","star","moon","wave","surf","wind",
+  "tree","fish","bird","rock","leaf","snow","sand","lake","hill","road","book","door","hand"
+];
+
+const WORDS_NORMAL = [
+  "about","after","again","being","could","every","first","found","great","house","large",
+  "learn","never","other","place","plant","point","right","small","sound","still","study",
+  "their","there","these","think","those","three","under","water","where","which","world",
+  "would","write","young","above","along","began","below","build","carry","clean","close",
+  "cover","earth","eight","false","focus","group","human","image","index","light","money",
+  "north","often","order","paper","power","quick","ready","scene","seven","sharp","since",
+  "sleep","space","start","stone","storm","table","today","trade","truth","until","video",
+  "watch","woman","extra","react","pixel","debug","admin","query","cache","parse","fetch",
+  "async","array","stack","modal","state","props","route","patch","merge","clone","scope"
+];
+
+const WORDS_HARD = [
+  "absolute","abstract","accurate","actually","advanced","analysis","approach","artifact",
+  "balanced","behavior","building","business","callback","campaign","capacity","cautious",
+  "champion","chemical","circular","climbing","coherent","collapse","combined","commerce",
+  "complete","compound","concrete","conflict","consider","contains","continue","contrast",
+  "controls","coverage","creating","criminal","critical","crossing","cultural","currency",
+  "database","deadline","december","decision","declared","declined","decrease","defaults",
+  "defender","defining","delicate","delivery","designed","detailed","develop","diagonal",
+  "dialogue","dinosaur","directly","discover","dispatch","distinct","district","doctrine",
+  "document","domestic","dominant","DownLoad","drafting","dramatic","duration","dynamics",
+  "keyboard","function","variable","template","protocol","iterator","compiler","debugger",
+  "encoding","pipeline","frontend","overflow","electron","firewall","graphics","hardware"
+];
+
+// ─── GAME STATE ───
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+const state = {
+  phase: 'menu', // menu | playing | gameover
+  difficulty: 'easy',
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  lives: 3,
+  wordsTyped: 0,
+  wordsPerMin: 0,
+  bestWpm: 0,
+  startTime: 0,
+  words: [],        // active falling words
+  particles: [],    // hit particles
+  spawnTimer: 0,
+  spawnInterval: 2000,
+  baseSpeed: 0.4,
+  typed: '',
+  targetWord: null,  // the word currently being targeted
+  bgStars: [],
+  shakeX: 0, shakeY: 0, shakeDecay: 0,
+  popups: [],  // floating score popups
+};
+
+const DIFF = {
+  easy:   { speed: 0.35, interval: 2200, lives: 5, list: WORDS_EASY },
+  normal: { speed: 0.55, interval: 1600, lives: 3, list: WORDS_NORMAL },
+  hard:   { speed: 0.75, interval: 1100, lives: 2, list: WORDS_HARD },
+};
+
+// ─── RESIZE ───
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─── BACKGROUND STARS ───
+function initStars() {
+  state.bgStars = [];
+  for (let i = 0; i < 120; i++) {
+    state.bgStars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + 0.3,
+      a: Math.random() * 0.5 + 0.1,
+      speed: Math.random() * 0.15 + 0.02,
+    });
+  }
+}
+initStars();
+
+// ─── PARTICLES ───
+function spawnParticles(x, y, color, count = 12) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const speed = Math.random() * 3 + 1.5;
+    state.particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1,
+      life: 1,
+      decay: Math.random() * 0.02 + 0.015,
+      r: Math.random() * 3 + 1.5,
+      color,
+    });
+  }
+}
+
+// ─── SCREEN SHAKE ───
+function shake(intensity = 8) {
+  state.shakeDecay = intensity;
+}
+
+// ─── SCORE POPUPS ───
+function addPopup(x, y, text, color = '#22c55e') {
+  state.popups.push({ x, y, text, color, life: 1, vy: -1.5 });
+}
+
+// ─── WORD SPAWNING ───
+function getWordList() { return DIFF[state.difficulty].list; }
+
+function spawnWord() {
+  const list = getWordList();
+  const text = list[Math.floor(Math.random() * list.length)];
+  // Don't spawn duplicates
+  if (state.words.find(w => w.text === text)) return;
+
+  const padding = 80;
+  const x = padding + Math.random() * (W - padding * 2);
+
+  state.words.push({
+    text,
+    x,
+    y: -20,
+    speed: DIFF[state.difficulty].speed * (0.8 + Math.random() * 0.4),
+    matched: 0,   // chars matched so far
+    targeted: false,
+    alpha: 1,
+    scale: 1,
+  });
+}
+
+// ─── INPUT HANDLING ───
+const input = document.getElementById('type-input');
+
+input.addEventListener('input', () => {
+  if (state.phase !== 'playing') return;
+
+  const typed = input.value.toLowerCase();
+
+  // Find or confirm target word
+  if (!state.targetWord) {
+    // Find best match
+    for (const w of state.words) {
+      if (w.text.startsWith(typed)) {
+        state.targetWord = w;
+        w.targeted = true;
+        break;
+      }
+    }
+  }
+
+  if (state.targetWord) {
+    const w = state.targetWord;
+    if (w.text.startsWith(typed)) {
+      w.matched = typed.length;
+      input.className = typed.length > 0 ? 'correct' : '';
+
+      // Word complete!
+      if (typed === w.text) {
+        completeWord(w);
+        input.value = '';
+        input.className = '';
+        state.targetWord = null;
+      }
+    } else {
+      // Wrong — reset target
+      input.className = 'wrong';
+      w.matched = 0;
+      w.targeted = false;
+      state.targetWord = null;
+
+      // Try to find a new match
+      for (const w2 of state.words) {
+        if (w2.text.startsWith(typed)) {
+          state.targetWord = w2;
+          w2.targeted = true;
+          w2.matched = typed.length;
+          input.className = 'correct';
+          break;
+        }
+      }
+    }
+  } else if (typed.length > 0) {
+    input.className = 'wrong';
+  }
+});
+
+function completeWord(w) {
+  state.combo++;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+  const comboMultiplier = 1 + Math.floor(state.combo / 5) * 0.5;
+  const lengthBonus = w.text.length * 10;
+  const points = Math.round(lengthBonus * comboMultiplier);
+  state.score += points;
+  state.wordsTyped++;
+
+  // WPM calc
+  const elapsed = (Date.now() - state.startTime) / 60000;
+  if (elapsed > 0.05) {
+    state.wordsPerMin = Math.round(state.wordsTyped / elapsed);
+    if (state.wordsPerMin > state.bestWpm) state.bestWpm = state.wordsPerMin;
+  }
+
+  // Particles + popup
+  const colors = ['#6366f1', '#8b5cf6', '#a855f7', '#22c55e'];
+  spawnParticles(w.x, w.y, colors[Math.floor(Math.random() * colors.length)], 16);
+  const popText = state.combo >= 5 ? `+${points} ${state.combo}x!` : `+${points}`;
+  addPopup(w.x, w.y - 20, popText, state.combo >= 5 ? '#f59e0b' : '#22c55e');
+
+  // Remove word
+  const idx = state.words.indexOf(w);
+  if (idx >= 0) state.words.splice(idx, 1);
+
+  // Speed up over time
+  if (state.wordsTyped % 10 === 0) {
+    state.spawnInterval = Math.max(600, state.spawnInterval - 100);
+  }
+
+  updateHUD();
+}
+
+function missWord(w) {
+  state.lives--;
+  state.combo = 0;
+  shake(10);
+  spawnParticles(w.x, w.y, '#ef4444', 10);
+  addPopup(w.x, w.y - 20, 'MISS', '#ef4444');
+
+  const idx = state.words.indexOf(w);
+  if (idx >= 0) state.words.splice(idx, 1);
+
+  if (state.targetWord === w) {
+    state.targetWord = null;
+    input.value = '';
+    input.className = '';
+  }
+
+  updateHUD();
+
+  if (state.lives <= 0) {
+    endGame();
+  }
+}
+
+// ─── HUD ───
+function updateHUD() {
+  document.getElementById('hud-score').textContent = state.score;
+  document.getElementById('hud-wpm').textContent = state.wordsPerMin;
+  document.getElementById('hud-combo').textContent = state.combo + 'x';
+  document.getElementById('hud-lives').textContent = '♥'.repeat(Math.max(0, state.lives));
+}
+
+// ─── GAME FLOW ───
+function startGame() {
+  state.phase = 'playing';
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.lives = DIFF[state.difficulty].lives;
+  state.wordsTyped = 0;
+  state.wordsPerMin = 0;
+  state.bestWpm = 0;
+  state.startTime = Date.now();
+  state.words = [];
+  state.particles = [];
+  state.spawnTimer = 0;
+  state.spawnInterval = DIFF[state.difficulty].interval;
+  state.targetWord = null;
+
+  document.getElementById('menu-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('input-box').style.display = 'block';
+
+  input.value = '';
+  input.className = '';
+  input.focus();
+  updateHUD();
+}
+
+function endGame() {
+  state.phase = 'gameover';
+
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('input-box').style.display = 'none';
+
+  // High score
+  const key = 'typestorm-hi-' + state.difficulty;
+  const prevHi = parseInt(localStorage.getItem(key) || '0');
+  const isNewHi = state.score > prevHi;
+  if (isNewHi) localStorage.setItem(key, state.score);
+
+  document.getElementById('go-score').textContent = state.score;
+  document.getElementById('go-score').style.color = isNewHi ? '#f59e0b' : '#22c55e';
+  document.getElementById('go-wpm').textContent = state.bestWpm;
+  document.getElementById('go-words').textContent = state.wordsTyped;
+  document.getElementById('go-combo').textContent = state.maxCombo + 'x';
+
+  // Show/hide new high score badge
+  let badge = document.getElementById('hi-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'hi-badge';
+    badge.style.cssText = 'color:#f59e0b;font-size:16px;font-weight:700;margin-top:4px;letter-spacing:2px;';
+    document.querySelector('#gameover-screen h2').after(badge);
+  }
+  badge.textContent = isNewHi ? 'NEW HIGH SCORE!' : `Best: ${prevHi}`;
+  badge.style.color = isNewHi ? '#f59e0b' : '#666';
+
+  document.getElementById('gameover-screen').style.display = 'flex';
+}
+
+// ─── BUTTONS ───
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('retry-btn').addEventListener('click', startGame);
+document.getElementById('menu-btn').addEventListener('click', () => {
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('menu-screen').style.display = 'flex';
+  state.phase = 'menu';
+});
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.difficulty = btn.dataset.diff;
+  });
+});
+
+// ─── RENDER LOOP ───
+let lastTime = 0;
+
+function gameLoop(time) {
+  const dt = Math.min(time - lastTime, 50);
+  lastTime = time;
+
+  // Shake
+  if (state.shakeDecay > 0.5) {
+    state.shakeX = (Math.random() - 0.5) * state.shakeDecay;
+    state.shakeY = (Math.random() - 0.5) * state.shakeDecay;
+    state.shakeDecay *= 0.85;
+  } else {
+    state.shakeX = 0; state.shakeY = 0; state.shakeDecay = 0;
+  }
+  ctx.save();
+  ctx.translate(state.shakeX, state.shakeY);
+
+  // Clear
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(-10, -10, W + 20, H + 20);
+
+  // Stars
+  for (const s of state.bgStars) {
+    s.y += s.speed * dt * 0.05;
+    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  if (state.phase === 'playing') {
+    // Spawn words
+    state.spawnTimer += dt;
+    if (state.spawnTimer >= state.spawnInterval) {
+      state.spawnTimer = 0;
+      spawnWord();
+    }
+
+    // Update words
+    for (let i = state.words.length - 1; i >= 0; i--) {
+      const w = state.words[i];
+      w.y += w.speed * dt * 0.06;
+
+      // Hit bottom
+      if (w.y > H - 80) {
+        missWord(w);
+        continue;
+      }
+
+      // Draw word
+      drawWord(w);
+    }
+
+    // Draw ground line
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 8]);
+    ctx.beginPath();
+    ctx.moveTo(0, H - 80);
+    ctx.lineTo(W, H - 80);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Particles
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // gravity
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      state.particles.splice(i, 1);
+      continue;
+    }
+
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Score popups
+  for (let i = state.popups.length - 1; i >= 0; i--) {
+    const p = state.popups[i];
+    p.y += p.vy;
+    p.life -= 0.015;
+    if (p.life <= 0) { state.popups.splice(i, 1); continue; }
+    ctx.globalAlpha = p.life;
+    ctx.font = '700 18px "Outfit", sans-serif';
+    ctx.fillStyle = p.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(p.text, p.x, p.y);
+    ctx.textAlign = 'start';
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.restore(); // end shake transform
+
+  requestAnimationFrame(gameLoop);
+}
+
+function drawWord(w) {
+  ctx.font = '700 22px "JetBrains Mono", monospace';
+
+  const text = w.text;
+  const totalWidth = ctx.measureText(text).width;
+  const x = w.x - totalWidth / 2;
+  const y = w.y;
+
+  // Background pill
+  const pad = 10;
+  const pillW = totalWidth + pad * 2;
+  const pillH = 36;
+  const pillX = x - pad;
+  const pillY = y - 24;
+
+  // Glow for targeted word
+  if (w.targeted) {
+    ctx.shadowColor = '#6366f1';
+    ctx.shadowBlur = 15;
+  }
+
+  ctx.fillStyle = w.targeted ? 'rgba(99, 102, 241, 0.15)' : 'rgba(20, 20, 35, 0.8)';
+  ctx.strokeStyle = w.targeted ? 'rgba(99, 102, 241, 0.5)' : 'rgba(50, 50, 70, 0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(pillX, pillY, pillW, pillH, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Progress bar under pill
+  if (w.matched > 0) {
+    const progress = w.matched / text.length;
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW * progress, pillH, 8);
+    ctx.fill();
+  }
+
+  // Draw characters
+  let cx = x;
+  for (let i = 0; i < text.length; i++) {
+    if (i < w.matched) {
+      ctx.fillStyle = '#22c55e'; // matched = green
+    } else if (w.targeted) {
+      ctx.fillStyle = '#e0e0e0'; // targeted = bright
+    } else {
+      ctx.fillStyle = '#888'; // default = dim
+    }
+    ctx.fillText(text[i], cx, y);
+    cx += ctx.measureText(text[i]).width;
+  }
+}
+
+// ─── KEYBOARD FOCUS ───
+document.addEventListener('keydown', (e) => {
+  if (state.phase === 'playing') {
+    input.focus();
+  }
+  if (state.phase === 'menu' && (e.key === 'Enter' || e.key === ' ')) {
+    startGame();
+  }
+  if (state.phase === 'gameover' && (e.key === 'Enter' || e.key === ' ')) {
+    startGame();
+  }
+});
+
+// Start loop
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
